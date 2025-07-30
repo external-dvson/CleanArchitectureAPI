@@ -3,12 +3,10 @@ using CleanArchitectureApi.Application.DTOs.Users;
 using CleanArchitectureApi.Domain.Entities;
 using CleanArchitectureApi.Domain.Repositories;
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CleanArchitectureApi.Application.Features.Users.Commands.CreateUser;
 
-public record CreateUserCommand(string Username) : IRequest<Result<UserDto>>;
+public record CreateUserCommand(string Username, string? Bio = null) : IRequest<Result<UserDto>>;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Result<UserDto>>
 {
@@ -32,6 +30,11 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
             Username = request.Username
         };
 
+        if (!string.IsNullOrEmpty(request.Bio))
+        {
+            user.CreateProfile(request.Bio);
+        }
+
         await _unitOfWork.Users.AddAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -39,7 +42,13 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         {
             Id = user.Id,
             Username = user.Username,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            Profile = user.Profile != null ? new UserProfileDto
+            { 
+                Id = user.Profile.Id,
+                Bio = user.Profile.Bio,
+                UserId = user.Profile.UserId
+            } : null
         };
 
         return Result<UserDto>.Success(userDto);

@@ -22,7 +22,7 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, Result<
 
     public async Task<Result<IEnumerable<UserDto>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
-        var users = await _unitOfWork.Users.GetAllAsync(cancellationToken);
+        var users = await _unitOfWork.Users.GetUsersWithProfileAsync(cancellationToken);
 
         var userDtos = users.Select(user => new UserDto
         {
