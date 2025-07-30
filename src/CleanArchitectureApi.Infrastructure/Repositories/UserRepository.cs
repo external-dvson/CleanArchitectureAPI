@@ -2,9 +2,6 @@ using CleanArchitectureApi.Domain.Entities;
 using CleanArchitectureApi.Domain.Repositories;
 using CleanArchitectureApi.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CleanArchitectureApi.Infrastructure.Repositories;
 
@@ -12,6 +9,14 @@ public class UserRepository : Repository<User>, IUserRepository
 {
     public UserRepository(ApplicationDbContext context) : base(context)
     {
+    }
+
+    public async Task<IEnumerable<User>> GetUsersWithProfileAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Include(u => u.Profile)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
@@ -82,5 +87,21 @@ public class UserRepository : Repository<User>, IUserRepository
                 }).ToList()
             })
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<User?> GetWithProfileForUpdateAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(u => u.Profile)
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+    }
+
+    public async Task UpdateUserWithNewProfileAsync(User user, UserProfile profile, CancellationToken cancellationToken = default)
+    {
+        // Ensure the new profile is added to the context
+        await _context.Set<UserProfile>().AddAsync(profile, cancellationToken);
+        
+        // Update the user to reflect the relationship
+        _context.Entry(user).Property(u => u.UpdatedAt).IsModified = true;
     }
 }
