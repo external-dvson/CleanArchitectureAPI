@@ -1,0 +1,9 @@
+{
+    "chat.mcp.serverSampling": {
+        "CleanArchitectureAPI/.vscode/mcp.json: my-mcp-server-a1851a2d": {
+            "allowedModels": [
+                "copilot/claude-sonnet-4"
+            ]
+        }
+    }
+}
