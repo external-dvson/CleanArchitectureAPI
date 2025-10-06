@@ -1,3 +1,4 @@
+using CleanArchitectureApi.Application.Common.Interfaces;
 using CleanArchitectureApi.Application.Common.Models;
 using CleanArchitectureApi.Application.DTOs.Users;
 using CleanArchitectureApi.Domain.Entities;
@@ -6,7 +7,7 @@ using MediatR;
 
 namespace CleanArchitectureApi.Application.Features.Users.Commands.CreateUser;
 
-public record CreateUserCommand(string Username, string? Bio = null) : IRequest<Result<UserDto>>;
+public record CreateUserCommand(string Username, string? Bio = null) : ITransactionalCommand<Result<UserDto>>;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Result<UserDto>>
 {

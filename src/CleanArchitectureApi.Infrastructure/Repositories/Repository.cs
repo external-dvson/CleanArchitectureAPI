@@ -89,4 +89,21 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         
         return await _dbSet.CountAsync(predicate, cancellationToken);
     }
+
+    public virtual async Task DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        // Remove all entities from the DbSet
+        var allEntities = await _dbSet.ToListAsync(cancellationToken);
+        _dbSet.RemoveRange(allEntities);
+    }
+
+    public virtual async Task<int> ExecuteSqlRawAsync(string sql, CancellationToken cancellationToken = default)
+    {
+        return await _context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+    }
+
+    public virtual async Task<int> ExecuteSqlRawAsync(string sql, params object[] parameters)
+    {
+        return await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+    }
 }
