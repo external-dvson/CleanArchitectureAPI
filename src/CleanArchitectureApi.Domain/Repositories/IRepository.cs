@@ -21,4 +21,9 @@ public interface IRepository<T> where T : BaseEntity
     void RemoveRange(IEnumerable<T> entities);
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, CancellationToken cancellationToken = default);
+    
+    // Advanced operations for bulk operations
+    Task DeleteAllAsync(CancellationToken cancellationToken = default);
+    Task<int> ExecuteSqlRawAsync(string sql, CancellationToken cancellationToken = default);
+    Task<int> ExecuteSqlRawAsync(string sql, params object[] parameters);
 }

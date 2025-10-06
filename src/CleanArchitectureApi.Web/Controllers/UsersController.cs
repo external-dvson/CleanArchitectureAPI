@@ -1,3 +1,4 @@
+using CleanArchitectureApi.Application.Features.Users.Commands.BulkReplaceUsers;
 using CleanArchitectureApi.Application.Features.Users.Commands.CreateUser;
 using CleanArchitectureApi.Application.Features.Users.Commands.UpdateUser;
 using CleanArchitectureApi.Application.Features.Users.Queries.GetAllUsers;
@@ -61,7 +62,24 @@ public class UsersController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    [HttpPost("bulk-replace")]
+    public async Task<IActionResult> BulkReplaceUsers([FromBody] BulkReplaceUsersRequest request)
+    {
+        var command = new BulkReplaceUsersCommand(
+            request.Users.Select(u => new BulkUserData(u.Username, u.Bio)).ToList()
+        );
+
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+
+        return Ok(result.Data);
+    }
 }
 
 public record CreateUserRequest(string Username, string? Bio = null);
 public record UpdateUserProfileRequest(string Bio);
+public record BulkReplaceUsersRequest(List<BulkUserRequest> Users);
+public record BulkUserRequest(string Username, string? Bio = null);

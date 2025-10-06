@@ -1,3 +1,4 @@
+using CleanArchitectureApi.Application.Common.Interfaces;
 using CleanArchitectureApi.Application.Common.Models;
 using CleanArchitectureApi.Application.DTOs.Posts;
 using CleanArchitectureApi.Domain.Entities;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace CleanArchitectureApi.Application.Features.Posts.Commands.CreatePost;
 
-public record CreatePostCommand(string Title, Guid UserId, List<string> TagNames) : IRequest<Result<PostDto>>;
+public record CreatePostCommand(string Title, Guid UserId, List<string> TagNames) : ITransactionalCommand<Result<PostDto>>;
 
 public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Result<PostDto>>
 {
@@ -37,10 +38,7 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Resul
             UserId = request.UserId
         };
 
-        await _unitOfWork.Posts.AddAsync(post, cancellationToken);
-
-        // Handle tags
-        var postTags = new List<PostTag>();
+        // Handle tags and create PostTag relationships
         foreach (var tagName in request.TagNames)
         {
             var tag = await _unitOfWork.Tags.GetByNameAsync(tagName, cancellationToken);
@@ -48,15 +46,21 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Resul
             {
                 tag = new Tag { Name = tagName };
                 await _unitOfWork.Tags.AddAsync(tag, cancellationToken);
+                // Save to get Tag ID
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
 
-            postTags.Add(new PostTag
+            // Add PostTag to Post's navigation property
+            post.PostTags.Add(new PostTag
             {
-                PostId = post.Id,
-                TagId = tag.Id
+                Post = post,
+                Tag = tag,
+                PostId = post.Id,    // Will be set by EF
+                TagId = tag.Id       // Already available
             });
         }
 
+        await _unitOfWork.Posts.AddAsync(post, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var postDto = new PostDto
